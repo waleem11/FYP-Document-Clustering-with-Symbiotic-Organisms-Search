@@ -1,5 +1,118 @@
 {% extends "base.html" %} {% block content %}
-<div class="container">
-    <h2>Optimised Symbiotic Organisms Search</h2>
+<div class="container mb-3">
+    <h2>Symbiotic Organisms Search Results</h2>
 </div>
-{% endblock%}
+
+<div class="container mb-3  ">
+    <input type="button" class="btn btn-primary col-2" value="Features" onclick="showDiv()" />
+    <input type="button" value="Cluster Info" class="btn btn-primary col-2" onclick="showDive()" />
+    <input type="button" value="Show Purity" class="btn btn-primary col-2" onclick="showDivp()" />
+    <form action="#"><div></div></form>
+
+    <div id="fDiv" class="col-12 my-3" style="height: 500px; overflow-y:auto; overflow-x:scroll;">
+        <table class="table table-bordered border-primary">
+            <thead>
+                <tr>
+                    <th scope="col">SNo</th>
+                    <th scope="col">Feature</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in kmean_seed[0][0] %}
+                <tr>
+                    <th scope="row">{{loop.index}}</th>
+                    <td width="60%">{{file}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="ciDiv" class="col-12 my-3" style="height: 500px; overflow-y:auto; overflow-x:scroll; display:none;">
+        <table class="table table-bordered border-primary">
+            <thead>
+                <tr>
+                    <th scope="col">Seed #</th>
+                    <th scope="col">Cluster Info</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(5) %}
+                <tr>
+                    <th scope="row">{{loop.index}}</th>
+                    <td>
+                        <table class="table table-bordered" style="vertical-align:auto">
+                            <thead>
+                                <tr>
+                                    <th scope="col">FileNames</th>
+                                    <th scope="col">Cluster</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key,value in kmean_seed[i][2].iterrows() %}
+                                    <tr>
+                                        <td>
+                                            <option value="{{ value['cluster'] }}">{{ value['filenames'] }}</option>
+                                        </td>
+                                        <td>
+                                            <option value="{{ value['cluster'] }}">{{ value['cluster'] }}</option>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="pDiv" class="col-12 my-3" style="height: 300px; overflow-y:auto; overflow-x:scroll; display:none;">
+        <table class="table table-bordered border-primary">
+            <thead>
+                <tr>
+                    <th scope="col">Seed #</th>
+                    <th scope="col">Purity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(5) %}
+                <tr>
+                    <th scope="row">{{loop.index}}</th>
+                    <td width="60%">{{kmean_seed[i][3]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function showDiv() {
+            if (document.getElementById('fDiv').style.display !== "none") {
+                document.getElementById('fDiv').style.display = "none";
+            } else {
+                document.getElementById('fDiv').style.display = "block";
+                document.getElementById('ciDiv').style.display = "none";
+                document.getElementById('pDiv').style.display = "none";
+            }
+
+        }
+        function showDive() {
+            if (document.getElementById('ciDiv').style.display !== "none") {
+                document.getElementById('ciDiv').style.display = "none";
+            } else {
+                document.getElementById('fDiv').style.display = "none";
+                document.getElementById('ciDiv').style.display = "block";
+                document.getElementById('pDiv').style.display = "none";
+            }
+        }
+        function showDivp() {
+            if (document.getElementById('pDiv').style.display !== "none") {
+                document.getElementById('pDiv').style.display = "none";
+            } else {
+                document.getElementById('fDiv').style.display = "none";
+                document.getElementById('ciDiv').style.display = "none";
+                document.getElementById('pDiv').style.display = "block";
+            }
+        }
+    </script>
+</div>
+{% endblock %}

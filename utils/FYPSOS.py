@@ -1,5 +1,6 @@
 #Importing libraries
 from ast import keyword
+from tabnanny import check
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -427,6 +428,7 @@ def fill_mutual_vector(mmvv):
 xinew = pd.DataFrame()
 check_df = pd.DataFrame()
 def begin_mutualism_ph1():
+    global xinew, check_df, pppp, pcheck
     pppp=0
     pcheck = pppp
     generations = 0
@@ -459,6 +461,7 @@ def begin_mutualism_ph1():
 
 xjnew = pd.DataFrame()
 def begin_mutualism_ph2():
+    global xjnew
     pppp=0
     global pcheck
     pcheck = pppp
@@ -568,7 +571,7 @@ def commensalism(cvec):
 
 def rand_commensalism(cvec):
     for i in range(true_k):
-        for j in range(40):
+        for j in range(2):
             while True:
                 index = random.randint(0, (len(filenames)-1))
                 if cvec[i][index] == 1:
@@ -620,7 +623,7 @@ def postpros_commensalism():
 
 
 
-def prepros_commensalism():
+def prepros_parasitism():
     max_smax()
     xbest = kmean_seed[xb][2].copy()
     xi1 = kmean_seed[xbs][2]
@@ -696,7 +699,7 @@ def rand_parasitism(pvec):
 def begin_parasitism_ph1():
     pppp=0
     pcheck = pppp
-    generations = 0;
+    generations = 0
     while generations < 10000:
         test_vector1 = fparasite_vec_i()
         test_vector2 = fparasite_vec_j()

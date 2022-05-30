@@ -1,3 +1,4 @@
+from glob import glob
 from flask import Flask, render_template, request
 from ast import keyword
 import time
@@ -64,8 +65,18 @@ def kmeanresults():
 @app.route('/sos', methods= ['GET', 'POST'])
 def sospage():
     if request.method == 'POST':
-        print("hello")
-    return render_template("sos.html")
+        max_smax()
+        prepros_mutualism()
+        begin_mutualism_ph1()
+        begin_mutualism_ph2()
+        post_pros()
+        prepros_commensalism()
+        begin_commensalism()
+        postpros_commensalism
+        prepros_parasitism()
+        begin_parasitism_ph1()
+        postpros_parasitism()
+    return render_template("sos.html", kmean_seed=kmean_seed)
 
 def upload_dataset(file_path):
     global dirnames, dirpath, filenames
@@ -278,6 +289,438 @@ def seedfile_save():
             for j in range(4):
                 f.write(str(kmean_seed[i][j]))
                 f.write("\n")    
+
+def max_smax():
+    global xb, xbs
+    m =max(kmean_seed[0][3],kmean_seed[1][3])
+    if kmean_seed[0][3] < kmean_seed[1][3]:
+        sm = kmean_seed[0][3]
+    else:
+        sm = kmean_seed[1][3]
+    for i in range(2,true_k):
+        if kmean_seed[i][3] > m:
+                sm = m
+                m =kmean_seed[i][3]
+        else:
+            if kmean_seed[i][3] > sm:
+                sm = kmean_seed[i][3]
+
+    for i in range(true_k):
+        if m == kmean_seed[i][3]:
+            xb = i
+        elif sm == kmean_seed[i][3]:
+            xbs = i
+
+#global lists
+xitemp = []
+xjtemp = []
+tempo = []
+
+xbest = pd.DataFrame()
+xi1 = pd.DataFrame()
+xj1 = pd.DataFrame()
+
+def vec():
+    global xitemp,xjtemp,tempo
+    for i in range(true_k):
+        itemp=[]
+        jtemp=[]
+        j = 0
+        templist_xi = []
+        templist_xj = []
+        countlist = []
+    
+    
+        for index, row in xj1.iterrows():
+            if row['cluster'] == i:
+                templist_xj.append(row['filenames'])
+    
+        #print(templist_xi)
+        d = len(templist_xj)
+        while j<true_k:
+            for index, row in xi1.iterrows():
+                if row['cluster'] == j:
+                    templist_xi.append(row['filenames'])
+        
+            #k = len(templist_xj)
+            firstcount = 0
+            for dd in range(0,d):
+                #for kk in range(0,k):
+                if templist_xj[dd] in templist_xi:
+                    firstcount += 1
+                
+
+            countlist.append(firstcount)
+            templist_xi.clear()
+            j+=1
+    
+        #print(countlist)
+        mmax = max(countlist)
+        ib = countlist.index(mmax)
+            
+        if ib in tempo:
+            third = first = second = -sys.maxsize
+            for i in range(0, len(countlist)):
+                if (countlist[i] > first):
+                    third = second
+                    second = first
+                    first = countlist[i]
+                elif (countlist[i] > second):
+                    third = second
+                    second = countlist[i]
+                elif (countlist[i] > third):
+                    third = countlist[i]
+            ib = countlist.index(second)
+        
+        if ib in tempo:
+            ib = countlist.index(third)
+        
+        tempo.append(ib)
+    
+        templist_xi.clear()    
+        for index, row in xi1.iterrows():
+            if row['cluster'] == ib:
+                templist_xi.append(row['filenames'])
+        
+        #print(templist_xj)
+        for file in filenames:
+            if file in templist_xi:
+                itemp.append(1)
+            else:
+                itemp.append(0)
+            if file in templist_xj:
+                jtemp.append(1)
+            else:
+                jtemp.append(0)
+    
+        xitemp.append(itemp)
+        xjtemp.append(jtemp)
+
+def prepros_mutualism():
+    global xbest, xi1, xj1
+    max_smax()
+    xbest = kmean_seed[xb][2].copy()
+    xi1 = kmean_seed[xbs][2]
+    xj1 = kmean_seed[xb][2]
+    vec()
+
+def f_mutual_vector():
+    mutual_vector = []
+    for i in range(true_k):
+        tempp = []
+        for j in range(len(filenames)):
+            tempp.append( xitemp[i][j] * xjtemp[i][j] )
+        mutual_vector.append(tempp)
+    return mutual_vector
+
+import random
+def rand_mutual_v(m_v):
+    for i in range(true_k):
+        for j in range(2):
+            while True:
+                index = random.randint(0, (len(filenames)-1))
+                if m_v[i][index] == 1:
+                    continue
+                else:
+                    m_v[i][index] = 1
+                    for k in range(true_k):
+                        if k != i:
+                            m_v[k][index] = 0
+                    break
+
+def fill_mutual_vector(mmvv):
+    for i in range(true_k):
+        for j in range(len(filenames)):
+            if (xjtemp[i][j] == 1 and mmvv[i][j] == 1) or (xjtemp[i][j] == 1 and mmvv[i][j] == 0):
+                mmvv[i][j]=1
+            else:
+                mmvv[i][j]=0
+
+xinew = pd.DataFrame()
+check_df = pd.DataFrame()
+def begin_mutualism_ph1():
+    global xinew, check_df, pppp, pcheck
+    pppp=0
+    pcheck = pppp
+    generations = 0
+    while generations < 10000:
+        mutual_vector = f_mutual_vector()
+        fill_mutual_vector(mutual_vector)
+        rand_mutual_v(mutual_vector)
+        xinew = pd.DataFrame(columns = ['filenames','cluster'])
+        for i in range(true_k):
+            for j in range(len(filenames)):
+                if mutual_vector[i][j] == 1:
+                    xinew = xinew.append({"filenames": filenames[j], "cluster": i}, ignore_index=True)
+                
+        xinew = xinew.sort_values(by=['cluster'])
+        xinew.reset_index(drop = True, inplace = True)
+
+        pp_info  = purity_calculation(xinew,true_k,gt)
+        pppp = c_purity(pp_info)
+        
+        if pppp > pcheck:
+            pcheck = pppp
+            check_df = pd.DataFrame(columns = ['filenames','cluster'])
+            check_df = xinew.copy()
+            
+        generations+=1
+
+    xinew = pd.DataFrame(columns = ['filenames','cluster'])
+    xinew = check_df.copy()
+
+xjnew = pd.DataFrame()
+def begin_mutualism_ph2():
+    global xjnew, pcheck, pppp, check_df
+    pppp=0
+    pcheck = pppp
+    generations = 0
+    while generations < 10000:
+        mutual_vector = f_mutual_vector()
+        fill_mutual_vector(mutual_vector)
+        rand_mutual_v(mutual_vector)
+        xjnew = pd.DataFrame(columns = ['filenames','cluster'])
+        for i in range(true_k):
+            for j in range(len(filenames)):
+                if mutual_vector[i][j] == 1:
+                    xjnew = xjnew.append({"filenames": filenames[j], "cluster": i}, ignore_index=True)
+                
+        xjnew = xjnew.sort_values(by=['cluster'])
+        xjnew.reset_index(drop = True, inplace = True)
+
+        pp_info  = purity_calculation(xjnew,true_k,gt)
+        pppp = c_purity(pp_info)
+        
+        if pppp > pcheck:
+            pcheck = pppp
+            check_df = pd.DataFrame(columns = ['filenames','cluster'])
+            check_df = xjnew.copy()
+            
+        generations+=1
+    xjnew = pd.DataFrame(columns = ['filenames','cluster'])
+    xjnew = check_df.copy()
+
+def min_smin():
+    global xmin, xmins
+    smin =max(kmean_seed[0][3],kmean_seed[1][3])
+    if kmean_seed[0][3] < kmean_seed[1][3]:
+        min_ = kmean_seed[0][3]
+    else:
+        min_ = kmean_seed[1][3]
+    for i in range(2,5):
+        if kmean_seed[i][3] < min_:
+                smin = min_
+                min_ =kmean_seed[i][3]
+        else:
+            if kmean_seed[i][3] < smin:
+                smin = kmean_seed[i][3]
+
+    for i in range(5):
+        if min_ == kmean_seed[i][3]:
+            xmin = i
+        elif smin == kmean_seed[i][3]:
+            xmins = i
+
+def post_pros():
+    min_smin()
+    pp_info  = purity_calculation(xinew,5,gt)
+    ppi = c_purity(pp_info)
+
+
+    kmean_seed[xmin][2] = xinew
+    kmean_seed[xmin][3] = ppi
+    kmean_seed[xmins][2] = xjnew
+    kmean_seed[xmins][3] = pcheck
+
+def prepros_commensalism():
+    global xbest, xi1, xj1
+    max_smax()
+    xbest = kmean_seed[xb][2].copy()
+    xi1 = kmean_seed[xbs][2]
+    xj1 = kmean_seed[xb][2]
+
+
+    xitemp.clear()
+    xjtemp.clear()
+    tempo.clear()
+    vec()
+
+def fcomm_vec():
+    comm_vec = []
+    for i in range(true_k):
+        temp = []
+        for j in range(len(filenames)):
+            if xjtemp[i][j] == 1:
+                temp.append(1)
+            else:
+                temp.append(0)
+        comm_vec.append(temp)
+    return comm_vec
+
+def commensalism(cvec):
+    for i in range(true_k):
+        for j in range(len(filenames)):
+            if (xitemp[i][j] == 1 and xjtemp[i][j] == 0):
+                cvec[i][j]=1
+                for k in range(true_k):
+                    if k!=i:
+                        cvec[k][j] = 0
+
+def rand_commensalism(cvec):
+    for i in range(true_k):
+        for j in range(2):
+            while True:
+                index = random.randint(0, (len(filenames)-1))
+                if cvec[i][index] == 1:
+                    continue
+                else:
+                    cvec[i][index] = 1
+                    for k in range(true_k):
+                        if k != i:
+                            cvec[k][index] = 0
+                    break
+
+def begin_commensalism():
+    global pppp, pcheck, xinew, check_df
+    pppp=0
+    pcheck = pppp
+    generations = 0
+    while generations < 10000:
+        test_vector = fcomm_vec()
+        commensalism(test_vector)
+        rand_commensalism(test_vector)
+        xinew = pd.DataFrame(columns = ['filenames','cluster'])
+        for i in range(true_k):
+            for j in range(len(filenames)):
+                if test_vector[i][j] == 1:
+                    xinew = xinew.append({"filenames": filenames[j], "cluster": i}, ignore_index=True)
+                
+        xinew = xinew.sort_values(by=['cluster'])
+        xinew.reset_index(drop = True, inplace = True)
+
+        pp_info  = purity_calculation(xinew,true_k,gt)
+        pppp = c_purity(pp_info)
+        
+        if pppp > pcheck:
+            pcheck = pppp
+            check_df = pd.DataFrame(columns = ['filenames','cluster'])
+            check_df = xinew.copy()
+            
+        generations+=1
+    xinew = pd.DataFrame(columns = ['filenames','cluster'])
+    xinew = check_df.copy()
+
+def postpros_commensalism():
+    min_smin()
+    kmean_seed[xmin][2] = xinew
+    kmean_seed[xmin][3] = pcheck
+
+def prepros_parasitism():
+    global xbest, xi1, xj1
+    max_smax()
+    xbest = kmean_seed[xb][2].copy()
+    xi1 = kmean_seed[xbs][2]
+    xj1 = kmean_seed[xb][2]
+    xitemp.clear()
+    xjtemp.clear()
+    tempo.clear()
+    vec()
+
+
+def fparasite_vec_i():
+    para_vec = []
+    for i in range(true_k):
+        temp = []
+        for j in range(len(filenames)):
+            if xitemp[i][j] == 1:
+                temp.append(1)
+            else:
+                temp.append(0)
+        para_vec.append(temp)
+    return para_vec
+
+def fparasite_vec_j():
+    para_vec = []
+    for i in range(true_k):
+        temp = []
+        for j in range(len(filenames)):
+            if xjtemp[i][j] == 1:
+                temp.append(1)
+            else:
+                temp.append(0)
+        para_vec.append(temp)
+    return para_vec
+
+def parasitism(pvec_i,pvec_j):
+    for i in range(true_k):
+        for j in range(len(filenames)):
+            if (xitemp[i][j] == 1 and xjtemp[i][j] == 0):
+                pvec_j[i][j]=1
+                pvec_i[i][j]=0
+                while True:
+                    indexi = random.randint(0, (true_k-1))
+                    if indexi == i:
+                        continue
+                    else:
+                        pvec_i[indexi][j]=1
+                        break
+                for k in range(true_k):
+                    if k!=i:
+                        pvec_j[k][j] = 0
+
+def rand_parasitism(pvec):
+    for i in range(true_k):
+        for j in range(2):
+            while True:
+                index = random.randint(0, (len(filenames)-1))
+                if pvec[i][index] == 1:
+                    continue
+                else:
+                    pvec[i][index] = 1
+                    for k in range(true_k):
+                        if k != i:
+                            pvec[k][index] = 0
+                    break
+
+def begin_parasitism_ph1():
+    global pcheck, pppp, check_df, xjnew
+    pppp=0
+    pcheck = pppp
+    generations = 0
+    while generations < 10000:
+        test_vector1 = fparasite_vec_i()
+        test_vector2 = fparasite_vec_j()
+        parasitism(test_vector1,test_vector2)
+        rand_parasitism(test_vector2)
+        xjnew = pd.DataFrame(columns = ['filenames','cluster'])
+        for i in range(true_k):
+            for j in range(len(filenames)):
+                if test_vector2[i][j] == 1:
+                    xjnew = xjnew.append({"filenames": filenames[j], "cluster": i}, ignore_index=True)
+                
+        xjnew = xjnew.sort_values(by=['cluster'])
+        xjnew.reset_index(drop = True, inplace = True)
+
+        pp_info  = purity_calculation(xjnew,true_k,gt)
+        
+        pppp = c_purity(pp_info)
+        
+        if pppp > pcheck:
+            pcheck = pppp
+            check_df = pd.DataFrame(columns = ['filenames','cluster'])
+            check_df = xjnew.copy()
+            
+        generations+=1
+
+    xjnew = pd.DataFrame(columns = ['filenames','cluster'])
+    xjnew = check_df.copy()
+
+def postpros_parasitism():
+    min_smin()            
+    kmean_seed[xmin][2] = xjnew
+    kmean_seed[xmin][3] = pcheck
+
+
 
 
 if __name__ == "__main__":
