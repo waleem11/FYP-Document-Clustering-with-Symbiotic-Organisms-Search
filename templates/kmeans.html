@@ -1,0 +1,28 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mb-3">
+    <h2>K-Means</h2>
+</div>
+
+<div class="container my-auto">
+    <div class="col-lg-8 offset-2 div-wrapper justify-content-center align-items-center">
+            {% if gt|length %}
+                <meta http-equiv='refresh' content='0; URL=/kmeanresults'>
+            {% else %}
+            <form action="/kmeans" , method="post">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="fp" id="filepath" required />
+                    <label for="filepath">Enter Path To The Ground Truth Directory For Computing Purity</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="kvalue" id="k" required />
+                    <label for="k">Enter The Value Of K</label>
+                </div>
+                <input type="submit" value="Proceed" class="btn btn-primary">
+            </form>
+            {% endif %}
+            
+        
+    </div>
+</div>
+
+{% endblock %}

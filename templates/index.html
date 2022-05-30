@@ -1,0 +1,40 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mb-3">
+    <h2>Document Clustering with Optimised Symbiotic Organisms Search</h2>
+</div>
+
+<div class="container mb-3">
+
+    <form action="/", method="post">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" name="fp" id="filepath" required />
+            <label for="filepath">Enter Path To The Dataset Directory</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+        {% if final_data|length %}
+            <a href="/kmeans" class="btn btn-primary col-2 my-2 mx-2" tabindex="-1" role="button" >Proceed To Kmeans</a>
+        {% endif %}
+    </form>
+
+
+    <div class="col-12 my-3" style="height: 1000px; overflow-y:auto; overflow-x:scroll;">
+        <table class="table table-bordered border-primary">
+            <thead>
+                <tr>
+                    <th scope="col">File#</th>
+                    <th scope="col">Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in final_data %}
+                <tr>
+                    <th scope="row">{{loop.index}}</th>
+                    <td width="60%">{{file}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
