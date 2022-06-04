@@ -12,10 +12,11 @@
 </head>
 
 <body>
-    <div class="container loader">
+    <div class="loader">
+        <div></div>
     </div>
     <div class="content">
-        <nav class="navbar navbar-primary bg-primary    ">
+        <nav class="navbar navbar-primary bg-primary">
             <div class="container">
                 <a class="navbar-brand" style="color: #fff" href="/">DOCUMENT CLUSTERING</a>
                 <button class="btn btn-outline-secondary my-2 my-sm-0" style="color: #fff" type="submit">Help</button>
@@ -27,8 +28,8 @@
     </div>
     <script>
         $(window).on('load' ,function () {
-            $(".loader").fadeOut("slow");
-            $(".content").fadeIn("slow");
+            $(".loader").fadeOut(1000);
+            $(".content").fadeIn(1000);
         });
     </script>
 </body>

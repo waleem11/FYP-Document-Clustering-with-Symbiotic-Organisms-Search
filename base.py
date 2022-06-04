@@ -1,4 +1,5 @@
 from glob import glob
+from pickle import FALSE
 from flask import Flask, render_template, request
 from ast import keyword
 import time
@@ -14,6 +15,12 @@ from nltk.stem import PorterStemmer
 from scipy.sparse import csr_matrix
 from sklearn.cluster import KMeans
 from werkzeug.utils import secure_filename
+
+from PyQt5.QtCore import *
+from PyQt5.QtWebEngineWidgets import *
+from PyQt5.QtWidgets import QApplication
+from threading import Timer
+import sys
 
 #Global variables
 filenames = []
@@ -62,21 +69,42 @@ def kmeanpage():
 def kmeanresults():
     return render_template('kmeanresults.html',  kmean_seed=kmean_seed)
 
-@app.route('/sos', methods= ['GET', 'POST'])
-def sospage():
+@app.route('/msos', methods= ['GET', 'POST'])
+def msos():
     if request.method == 'POST':
         max_smax()
         prepros_mutualism()
         begin_mutualism_ph1()
         begin_mutualism_ph2()
         post_pros()
+    return render_template("msos.html", kmean_seed=kmean_seed)
+
+@app.route('/csos', methods= ['GET', 'POST'])
+def csos():
+    if request.method == 'POST':
         prepros_commensalism()
         begin_commensalism()
-        postpros_commensalism
+        postpros_commensalism()
+    return render_template("csos.html", kmean_seed=kmean_seed)
+
+@app.route('/psos', methods= ['GET', 'POST'])
+def psos():
+    if request.method == 'POST':
         prepros_parasitism()
         begin_parasitism_ph1()
         postpros_parasitism()
-    return render_template("sos.html", kmean_seed=kmean_seed)
+    return render_template("psos.html", kmean_seed=kmean_seed)
+
+
+def ui(location):
+    app = QApplication(sys.argv)
+    web = QWebEngineView()
+    web.setWindowTitle("FYP-SOS")
+    web.resize(900, 600)
+    #web.setZoomFactor(1)
+    web.load(QUrl(location))
+    web.show()
+    sys.exit(app.exec_())
 
 def upload_dataset(file_path):
     global dirnames, dirpath, filenames
@@ -213,32 +241,32 @@ def purity_calculation(clusterinf,tk,gt):
         first_i = 0
         firstcount = [0]*j
         for jj in range(j):
-            k = len(gt[it])
-            for kk in range(k):
-                for dd in range(d):
-                    if gt[jj][kk] == templist[dd]:
-                        firstcount[first_i] += 1
-                        break
+            for dd in range(d):
+                if templist[dd] in gt[jj]:
+                    firstcount[first_i] += 1
+
             first_i+=1
             it+=1
         
         mmax = max(firstcount)
         ib = firstcount.index(mmax)
-            
+        
         if ib in tempo:
-            max_=max(firstcount[0],firstcount[1])
-            if firstcount[0] < firstcount[1]:
-                secondmax = firstcount[0]
-            else:
-                secondmax = firstcount[1]
-            for n in range(2,len(firstcount)):
-                if firstcount[n]>max_:
-                    secondmax=max_
-                    max_=firstcount[n]
-                else:
-                    if firstcount[n]>secondmax:
-                        secondmax=firstcount[n]
-            ib = firstcount.index(secondmax)
+            third = first = second = -sys.maxsize
+            for i in range(0, len(firstcount)):
+                if (firstcount[i] > first):
+                    third = second
+                    second = first
+                    first = firstcount[i]
+                elif (firstcount[i] > second):
+                    third = second
+                    second = firstcount[i]
+                elif (firstcount[i] > third):
+                    third = firstcount[i]
+            ib = firstcount.index(second)
+        
+        if ib in tempo:
+            ib = firstcount.index(third)
         
         tempo.append(ib)
         
@@ -264,7 +292,9 @@ def ff_features():
 
 def kmeanseed():
     global kmean_seed
-    for i in range(true_k):
+    rr = []
+    i = 0
+    while i < 5:
         s = []
         labels = kmeans(tfidf_matrix)
         cluster_info = to_dataframe(filenames, labels)
@@ -275,12 +305,14 @@ def kmeanseed():
         #d_dict = dict()
         #for index, row in cluster_info.iterrows():
         #    d_dict.update({row['filenames'] : row['cluster']})
-        s.append(features)
-        s.append(labels)
-        s.append(cluster_info)
-        s.append(purity)
-            
-        kmean_seed.append(s)
+        if(purity > 64 and purity not in rr):
+            s.append(features)
+            s.append(labels)
+            s.append(cluster_info)
+            s.append(purity)
+            rr.append(purity)
+            kmean_seed.append(s)
+            i +=1
 
 def seedfile_save():
     with open("kmeanseeds(webkb).txt",'w') as f:
@@ -359,21 +391,57 @@ def vec():
         ib = countlist.index(mmax)
             
         if ib in tempo:
-            third = first = second = -sys.maxsize
+            third = first = second = fourth = fifth = -sys.maxsize
             for i in range(0, len(countlist)):
                 if (countlist[i] > first):
+                    fifth = fourth
+                    fourth = third
                     third = second
                     second = first
                     first = countlist[i]
                 elif (countlist[i] > second):
+                    fifth = fourth
+                    fourth = third
                     third = second
                     second = countlist[i]
                 elif (countlist[i] > third):
+                    fifth = fourth
+                    fourth = third
                     third = countlist[i]
+                elif (countlist[i] > fourth):
+                    fifth = fourth
+                    fourth = countlist[i]
+                elif (countlist[i] > fifth):
+                    fifth = countlist[i]
+                    
             ib = countlist.index(second)
         
         if ib in tempo:
             ib = countlist.index(third)
+            if countlist[ib] == 0:
+                while True:
+                    index = random.randint(0, (true_k-1))
+                    if index not in tempo:
+                        ib = index
+                        break
+        
+        if ib in tempo:
+            ib = countlist.index(fourth)
+            if countlist[ib] == 0:
+                while True:
+                    index = random.randint(0, (true_k-1))
+                    if index not in tempo:
+                        ib = index
+                        break
+            
+        if ib in tempo:
+            ib = countlist.index(fifth)
+            if countlist[ib] == 0:
+                while True:
+                    index = random.randint(0, (true_k-1))
+                    if index not in tempo:
+                        ib = index
+                        break
         
         tempo.append(ib)
     
@@ -443,7 +511,7 @@ def begin_mutualism_ph1():
     pppp=0
     pcheck = pppp
     generations = 0
-    while generations < 10000:
+    while generations < 100:
         mutual_vector = f_mutual_vector()
         fill_mutual_vector(mutual_vector)
         rand_mutual_v(mutual_vector)
@@ -475,7 +543,7 @@ def begin_mutualism_ph2():
     pppp=0
     pcheck = pppp
     generations = 0
-    while generations < 10000:
+    while generations < 100:
         mutual_vector = f_mutual_vector()
         fill_mutual_vector(mutual_vector)
         rand_mutual_v(mutual_vector)
@@ -523,7 +591,7 @@ def min_smin():
 
 def post_pros():
     min_smin()
-    pp_info  = purity_calculation(xinew,5,gt)
+    pp_info  = purity_calculation(xinew,true_k,gt)
     ppi = c_purity(pp_info)
 
 
@@ -585,7 +653,7 @@ def begin_commensalism():
     pppp=0
     pcheck = pppp
     generations = 0
-    while generations < 10000:
+    while generations < 100:
         test_vector = fcomm_vec()
         commensalism(test_vector)
         rand_commensalism(test_vector)
@@ -687,7 +755,7 @@ def begin_parasitism_ph1():
     pppp=0
     pcheck = pppp
     generations = 0
-    while generations < 10000:
+    while generations < 100:
         test_vector1 = fparasite_vec_i()
         test_vector2 = fparasite_vec_j()
         parasitism(test_vector1,test_vector2)
@@ -724,4 +792,5 @@ def postpros_parasitism():
 
 
 if __name__ == "__main__":
+    #Timer(1,lambda: ui("http://127.0.0.1:5000/")).start()
     app.run(debug=True)
